@@ -1,0 +1,117 @@
+name: "desplegar"
+
+services:
+  tienda-back:
+    build:
+      context: ./tienda-back
+      dockerfile: Dockerfile
+    container_name: tienda-back-retoquesexpress
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb-tienda:3306/retoquesexpresdb
+      SPRING_DATASOURCE_USERNAME: root-retoquesexpress
+      SPRING_DATASOURCE_PASSWORD: root-retoquesexpress
+    networks:
+      - proxy_red
+    depends_on:
+      mariadb-tienda:
+        condition: service_healthy
+    restart: on-failure
+
+  banco-back:
+    build:
+      context: ./banco-back
+      dockerfile: Dockerfile
+    container_name: banco-back-retoquesexpress
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb-banco:3306/bancobackdb
+      SPRING_DATASOURCE_USERNAME: root-retoquesexpress
+      SPRING_DATASOURCE_PASSWORD: root-retoquesexpress
+    networks:
+      - proxy_red
+    depends_on:
+      mariadb-banco:
+        condition: service_healthy
+    restart: on-failure
+
+  tienda-front:
+    build:
+      context: ./tienda-front
+      dockerfile: Dockerfile
+    container_name: tienda-front-retoquesexpress
+    ports:
+      - "4200:80"
+    networks:
+      - proxy_red
+
+  tienda-adm-front:
+    build:
+      context: ./tienda-adm-front
+      dockerfile: Dockerfile
+    container_name: tienda-adm-front-retoquesexpress
+    ports:
+      - "4201:80"
+    networks:
+      - proxy_red
+
+  banco-front:
+    build:
+      context: ./banco-front
+      dockerfile: Dockerfile
+    container_name: banco-front-retoquesexpress
+    ports:
+      - "4202:80"
+    networks:
+      - proxy_red
+
+  mariadb-tienda:
+    image: mariadb:latest
+    container_name: mariadb-tienda-retoquesexpress
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: retoquesexpresdb
+      MYSQL_USER: root-retoquesexpress
+      MYSQL_PASSWORD: root-retoquesexpress
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_tienda_data:/var/lib/mysql
+    networks:
+      - proxy_red
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mariadb-banco:
+    image: mariadb:latest
+    container_name: mariadb-banco-retoquesexpress
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bancobackdb
+      MYSQL_USER: root-retoquesexpress
+      MYSQL_PASSWORD: root-retoquesexpress
+    ports:
+      - "3308:3306"
+    volumes:
+      - mariadb_banco_data:/var/lib/mysql
+    networks:
+      - proxy_red
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mariadb_tienda_data:
+  mariadb_banco_data:
+
+
+networks:
+  proxy_red:
+    driver: bridge
