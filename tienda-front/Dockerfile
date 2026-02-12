@@ -9,7 +9,7 @@ RUN git clone https://github.com/retoquesexpress/tienda-front-cliente.git
 WORKDIR /opt/app/tienda-front-cliente
 RUN git switch --detach origin/develop
 RUN npm ci
-RUN find src -type f -name "*.ts" -exec sed -i -E 's|http://localhost:808[01]|http://192.168.94.3:8081|g' {} +
+RUN find src -type f -name "*.ts" -exec sed -i -E 's|http://localhost:8080|http://192.168.94.3:8081|g' {} +
 RUN npm run build -- --configuration production
 
 FROM nginx:1.28.0-alpine3.21
